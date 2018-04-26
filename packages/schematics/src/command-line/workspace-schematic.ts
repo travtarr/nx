@@ -22,9 +22,8 @@ import {
   Tree,
   DryRunSink
 } from '@angular-devkit/schematics';
-import { of } from 'rxjs/observable/of';
+import { of, Observable } from 'rxjs';
 import { concat, concatMap, ignoreElements, map } from 'rxjs/operators';
-import { Observable } from 'rxjs/Observable';
 import { Url } from 'url';
 
 import * as yargsParser from 'yargs-parser';

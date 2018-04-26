@@ -53,12 +53,19 @@ export function copyMissingPackages(): void {
     'jasmine-marbles',
     '@nrwl',
     'angular',
+    '@angular-devkit',
     '@angular/upgrade',
     'npm-run-all',
     'yargs',
     'yargs-parser'
   ];
   modulesToCopy.forEach(m => copyNodeModule(projectName, m));
+  execSync(`rm -rf tmp/${projectName}/node_modules/@angular-devkit/build-angular/node_modules`);
+
+  const libIndex = `./tmp/${projectName}/node_modules/@schematics/angular/library/index.js`;
+  const content = readFileSync(libIndex).toString();
+  const updatedContent = content.replace('context.addTask(new tasks_1.NodePackageInstallTask());', '');
+  writeFileSync(libIndex, updatedContent);
 }
 
 function copyNodeModule(path: string, name: string) {

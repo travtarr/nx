@@ -8,12 +8,13 @@ import {
   touchedProjects,
   dependencies,
   Dependency,
-  affectedProjectNames
+  affectedProjectNames, affectedE2eNames
 } from './affected-apps';
 import * as fs from 'fs';
 import { statSync } from 'fs';
 import * as appRoot from 'app-root-path';
 import { readJsonFile } from '../utils/fileutils';
+import {min} from "rxjs/operators";
 
 export function parseFiles(
   args: string[]
@@ -104,38 +105,59 @@ function parseGitOutput(command: string): string[] {
     .filter(a => a.length > 0);
 }
 
-export function getProjectNodes(config) {
-  return (config.apps ? config.apps : [])
-    .filter(p => p.name !== '$workspaceRoot')
-    .map(p => {
-      return {
-        name: p.name,
-        root: p.root,
-        type: p.root.startsWith('apps/') ? ProjectType.app : ProjectType.lib,
-        tags: p.tags,
-        files: allFilesInDir(`${appRoot.path}/${path.dirname(p.root)}`)
-      };
-    });
-}
-
-export function readCliConfig(): any {
-  const config = readJsonFile(`${appRoot.path}/.angular-cli.json`);
-
-  if (!config.project.npmScope) {
-    throw new Error(`.angular-cli.json must define the npmScope property.`);
+export function getProjectNodes(angularJson, nxJson) {
+  const angularJsonProjects = Object.keys(angularJson.projects);
+  const nxJsonProjects = Object.keys(nxJson.projects);
+  if (minus(angularJsonProjects, nxJsonProjects).length > 0) {
+    throw new Error(`angular.json and nx.json are out of sync. The following projects are missing in nx.json: ${minus(angularJsonProjects, nxJsonProjects).join(', ')}`);
+  }
+  if (minus(nxJsonProjects, angularJsonProjects).length > 0) {
+    throw new Error(`angular.json and nx.json are out of sync. The following projects are missing in angular.json: ${minus(angularJsonProjects, nxJsonProjects).join(', ')}`);
   }
 
+  return angularJsonProjects.map(key => {
+    const p = angularJson.projects[key];
+    const tags = nxJson.projects[key].tags;
+    return ({
+      name: key,
+      root: p.root,
+      type: p.projectType === 'application' ? (key.endsWith('-e2e') ? ProjectType.e2e : ProjectType.app) : ProjectType.lib,
+      tags,
+      files: allFilesInDir(`${appRoot.path}/${p.root}`)
+    });
+  });
+}
+
+function minus(a: string[], b: string[]): string[] {
+  const res = [];
+  a.forEach(aa => {
+    if (! b.find(bb => bb === aa)) {
+      res.push(aa);
+    }
+  });
+  return res;
+}
+
+export function readAngularJson(): any {
+  return readJsonFile(`${appRoot.path}/angular.json`);
+}
+
+export function readNxJson(): any {
+  const config = readJsonFile(`${appRoot.path}/nx.json`);
+  if (!config.npmScope) {
+    throw new Error(`nx.json must define the npmScope property.`);
+  }
   return config;
 }
 
 export const getAffected = (affectedNamesFetcher: AffectedFetcher) => (
   touchedFiles: string[]
 ): string[] => {
-  const config = readCliConfig();
-  const projects = getProjectNodes(config);
+  const nxJson = readNxJson();
+  const projects = getProjectNodes(readAngularJson(), nxJson);
 
   return affectedNamesFetcher(
-    config.project.npmScope,
+    nxJson.npmScope,
     projects,
     f => fs.readFileSync(`${appRoot.path}/${f}`, 'utf-8'),
     touchedFiles
@@ -143,16 +165,17 @@ export const getAffected = (affectedNamesFetcher: AffectedFetcher) => (
 };
 
 export const getAffectedApps = getAffected(affectedAppNames);
+export const getAffectedE2e = getAffected(affectedE2eNames);
 export const getAffectedProjects = getAffected(affectedProjectNames);
 
 export function getTouchedProjects(touchedFiles: string[]): string[] {
-  return touchedProjects(getProjectNodes(readCliConfig()), touchedFiles).filter(
+  return touchedProjects(getProjectNodes(readAngularJson(), readNxJson()), touchedFiles).filter(
     p => !!p
   );
 }
 
 export function getProjectRoots(projectNames: string[]): string[] {
-  const projects = getProjectNodes(readCliConfig());
+  const projects = getProjectNodes(readAngularJson(), readNxJson());
   return projectNames.map(name =>
     path.dirname(projects.filter(p => p.name === name)[0].root)
   );
@@ -206,7 +229,8 @@ export function lastModifiedAmongProjectFiles() {
   return [
     recursiveMtime(`${appRoot.path}/libs`),
     recursiveMtime(`${appRoot.path}/apps`),
-    mtime(`${appRoot.path}/.angular-cli.json`),
+    mtime(`${appRoot.path}/angular.json`),
+    mtime(`${appRoot.path}/nx.json`),
     mtime(`${appRoot.path}/tslint.json`),
     mtime(`${appRoot.path}/package.json`)
   ].reduce((a, b) => (a > b ? a : b), 0);

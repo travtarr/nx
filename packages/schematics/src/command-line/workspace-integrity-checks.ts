@@ -41,7 +41,7 @@ export class WorkspaceIntegrityChecks {
   private projectWithoutFilesCheck(): ErrorGroup[] {
     const errors = this.projectNodes
       .filter(n => n.files.length === 0)
-      .map(p => `Cannot find project '${p.name}' in '${path.dirname(p.root)}'`);
+      .map(p => `Cannot find project '${p.name}' in '${p.root}'`);
 
     return errors.length === 0
       ? []

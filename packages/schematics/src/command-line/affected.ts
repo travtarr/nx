@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { getAffectedApps, getAffectedProjects, parseFiles } from './shared';
+import {getAffectedApps, getAffectedE2e, getAffectedProjects, parseFiles} from './shared';
 import * as path from 'path';
 import * as resolve from 'resolve';
 import * as runAll from 'npm-run-all';
@@ -9,6 +9,7 @@ import { generateGraph } from './dep-graph';
 export function affected(args: string[]): void {
   const command = args[0];
   let apps: string[];
+  let e2eProjects: string[];
   let projects: string[];
   let rest: string[];
 
@@ -16,6 +17,7 @@ export function affected(args: string[]): void {
     const p = parseFiles(args.slice(1));
     rest = p.rest;
     apps = getAffectedApps(p.files);
+    e2eProjects = getAffectedE2e(p.files);
     projects = getAffectedProjects(p.files);
   } catch (e) {
     printError(command, e);
@@ -30,7 +32,7 @@ export function affected(args: string[]): void {
       build(apps, rest);
       break;
     case 'e2e':
-      e2e(apps, rest);
+      e2e(e2eProjects, rest);
       break;
     case 'dep-graph':
       generateGraph(yargsParser(rest), projects);
@@ -56,7 +58,7 @@ function build(apps: string[], rest: string[]) {
     const buildCommands = rest.filter(a => !a.startsWith('--parallel') && !a.startsWith('--no-parallel'));
     if (parallel) {
       runAll(
-        apps.map(app => `ng build -- ${buildCommands.join(' ')} -a=${app}`),
+        apps.map(app => `ng build -- ${buildCommands.join(' ')} --project=${app}`),
         {
           parallel,
           stdin: process.stdin,
@@ -69,7 +71,7 @@ function build(apps: string[], rest: string[]) {
     } else {
       apps.forEach(app => {
         execSync(
-          `node ${ngPath()} build ${buildCommands.join(' ')} -a=${app}`,
+          `node ${ngPath()} build ${buildCommands.join(' ')} --project=${app}`,
           {
             stdio: [0, 1, 2]
           }
@@ -86,7 +88,7 @@ function e2e(apps: string[], rest: string[]) {
   if (apps.length > 0) {
     console.log(`Testing ${apps.join(', ')}`);
     apps.forEach(app => {
-      execSync(`node ${ngPath()} e2e ${rest.join(' ')} -a=${app}`, {
+      execSync(`node ${ngPath()} e2e ${rest.join(' ')} --project=${app}`, {
         stdio: [0, 1, 2]
       });
     });
