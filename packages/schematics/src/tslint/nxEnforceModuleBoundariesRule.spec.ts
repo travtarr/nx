@@ -574,6 +574,7 @@ function runRule(
     ts.ScriptTarget.Latest,
     true
   );
+
   const rule = new Rule(
     options,
     `${process.cwd()}/proj`,
