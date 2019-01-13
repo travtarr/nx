@@ -69,7 +69,6 @@
     "karma-jasmine": "~1.1.1",
     "karma-webpack": "2.0.4",
     "license-webpack-plugin": "^1.4.0",
-    "lint-staged": "^7.2.2",
     "ng-packagr": "4.3.1",
     "npm-run-all": "^4.1.5",
     "opn": "^5.3.0",
@@ -99,17 +98,6 @@
     "modulePathIgnorePatterns": [
       "tmp",
       "collection/.*/files"
-    ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "**/*.{ts,js,json,css,md}": [
-      "prettier --write",
-      "git add"
     ]
   },
   "config": {
