@@ -12,7 +12,6 @@
     "format": "./scripts/format.sh",
     "linknpm": "./scripts/link.sh",
     "nx-release": "./scripts/nx-release.js",
-    "copy": "./scripts/copy.sh",
     "test:schematics": "yarn linknpm fast && ./scripts/test_schematics.sh",
     "test:nx": "yarn linknpm fast && ./scripts/test_nx.sh",
     "test": "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",

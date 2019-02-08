@@ -33,10 +33,12 @@ rm -rf build/packages/nx/spec
 cp README.md build/packages/builders
 cp README.md build/packages/schematics
 cp README.md build/packages/nx
+cp README.md build/packages/angular-vscode
 cp LICENSE build/packages/bazel
 cp LICENSE build/packages/builders
 cp LICENSE build/packages/schematics
 cp LICENSE build/packages/nx
+cp LICENSE build/packages/angular-vscode
 
 echo "Nx libraries available at build/packages:"
 ls build/packages

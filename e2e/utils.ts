@@ -54,6 +54,7 @@ export function copyMissingPackages(): void {
     '@ngrx',
     '@nrwl',
     'angular',
+    'angular-vscode',
     '@angular/upgrade',
     'npm-run-all',
     'yargs',
