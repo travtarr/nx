@@ -61,7 +61,8 @@ export function getWebpackConfig(
         workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE
       })
     ],
-    watch: options.watch
+    watch: options.watch,
+    watchOptions: options.watchOptions
   };
 
   const extraPlugins: webpack.Plugin[] = [];

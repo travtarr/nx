@@ -16,6 +16,7 @@ import {
   AssetPattern,
   AssetPatternObject
 } from '@angular-devkit/build-angular';
+import { WatchOptions } from 'webpack';
 
 try {
   require('dotenv').config();
@@ -26,6 +27,7 @@ export interface BuildNodeBuilderOptions {
   outputPath: string;
   tsConfig: string;
   watch?: boolean;
+  watchOptions?: WatchOptions;
   sourceMap?: boolean;
   optimization?: boolean;
   externalDependencies: 'all' | 'none' | string[];
